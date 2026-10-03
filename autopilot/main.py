@@ -564,6 +564,9 @@ def cmd_test(args):
 def main():
     parts = " ".join(sys.argv[1:]).split() or ["poll"]
     cmd, args = parts[0], parts[1:]
+    if cmd in ("poll", "trends") and not (config.TELEGRAM_BOT_TOKEN and config.TELEGRAM_CHAT_ID):
+        print("::notice title=Not set up yet::Add the TELEGRAM_BOT_TOKEN and TELEGRAM_CHAT_ID secrets (see README).")
+        return
     try:
         if cmd == "test":
             return cmd_test(args)
