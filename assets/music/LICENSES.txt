@@ -1,0 +1,3 @@
+Put royalty-free tracks here (e.g. from the YouTube Audio Library "no attribution required" filter,
+or Pixabay Music). One is picked at random per video at 10% volume. Note each track's source/license below.
+Leave the folder empty for voice-only videos (safest).

@@ -1,0 +1,116 @@
+name: whyzo-autopilot
+
+on:
+  schedule:
+    - cron: "17 3,9,15,21 * * *" # idea run every 6 hours: 11:17pm, 5:17am, 11:17am, 5:17pm New York (EDT)
+    - cron: "4,24,44 * * * *" # ~every 20 min (off-peak minutes): stays online ~12 min answering Telegram
+  workflow_dispatch:
+    inputs:
+      command:
+        description: "trends | poll | stats | aicheck | test [howitworks|why|whatif|survival|truestory|creature|hack]"
+        default: "poll"
+
+permissions:
+  contents: write              # commit state + store videos as Releases
+
+concurrency:
+  group: whyzo-autopilot             # never run two at once (shared state)
+  cancel-in-progress: false
+
+jobs:
+  run:
+    runs-on: ubuntu-latest
+    timeout-minutes: 90
+    env:
+      GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+      TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
+      GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+      GROQ_API_KEY: ${{ secrets.GROQ_API_KEY }}
+      OPENROUTER_API_KEY: ${{ secrets.OPENROUTER_API_KEY }}
+      CEREBRAS_API_KEY: ${{ secrets.CEREBRAS_API_KEY }}
+      MISTRAL_API_KEY: ${{ secrets.MISTRAL_API_KEY }}
+      YOUTUBE_API_KEY: ${{ secrets.YOUTUBE_API_KEY }}
+      PEXELS_API_KEY: ${{ secrets.PEXELS_API_KEY }}
+      PIXABAY_API_KEY: ${{ secrets.PIXABAY_API_KEY }}
+      YT_CLIENT_ID: ${{ secrets.YT_CLIENT_ID }}
+      YT_CLIENT_SECRET: ${{ secrets.YT_CLIENT_SECRET }}
+      YT_REFRESH_TOKEN: ${{ secrets.YT_REFRESH_TOKEN }}
+      FB_PAGE_ID: ${{ secrets.FB_PAGE_ID }}
+      FB_PAGE_TOKEN: ${{ secrets.FB_PAGE_TOKEN }}
+      IG_USER_ID: ${{ secrets.IG_USER_ID }}
+      IG_ACCESS_TOKEN: ${{ secrets.IG_ACCESS_TOKEN }}
+      TIKTOK_CLIENT_KEY: ${{ secrets.TIKTOK_CLIENT_KEY }}
+      TIKTOK_CLIENT_SECRET: ${{ secrets.TIKTOK_CLIENT_SECRET }}
+      TIKTOK_REFRESH_TOKEN: ${{ secrets.TIKTOK_REFRESH_TOKEN }}
+      CF_ACCOUNT_ID: ${{ secrets.CF_ACCOUNT_ID }}
+      CF_API_TOKEN: ${{ secrets.CF_API_TOKEN }}
+      FAL_KEY: ${{ secrets.FAL_KEY }}
+      # Behaviour: set these under Settings > Secrets and variables > Actions > Variables
+      CHANNEL_NAME: ${{ vars.CHANNEL_NAME }}
+      NICHE: ${{ vars.NICHE }}
+      IDEAS_PER_RUN: ${{ vars.IDEAS_PER_RUN }}
+      VIDEOS_PER_RUN: ${{ vars.VIDEOS_PER_RUN }}
+      ANIMATE_SHOTS: ${{ vars.ANIMATE_SHOTS }}
+      FAL_VIDEO_MODEL: ${{ vars.FAL_VIDEO_MODEL }}
+      FAL_IMAGE_MODEL: ${{ vars.FAL_IMAGE_MODEL }}
+      ART_STYLE: ${{ vars.ART_STYLE }}
+      SFX: ${{ vars.SFX }}
+      REGION: ${{ vars.REGION }}
+      LANGUAGE: ${{ vars.LANGUAGE }}
+      VOICE: ${{ vars.VOICE }}
+      VOICES: ${{ vars.VOICES }}
+      VISUALS: ${{ vars.VISUALS }}
+      GEMINI_MODEL: ${{ vars.GEMINI_MODEL }}
+      MAX_VIDEOS_PER_DAY: ${{ vars.MAX_VIDEOS_PER_DAY }}
+      SELECT_TIMEOUT_HOURS: ${{ vars.SELECT_TIMEOUT_HOURS }}
+      REQUIRE_APPROVAL: ${{ vars.REQUIRE_APPROVAL }}
+      APPROVE_TIMEOUT_HOURS: ${{ vars.APPROVE_TIMEOUT_HOURS }}
+      YT_PRIVACY: ${{ vars.YT_PRIVACY }}
+      TIKTOK_PRIVACY: ${{ vars.TIKTOK_PRIVACY }}
+      TIKTOK_MODE: ${{ vars.TIKTOK_MODE }}
+      TARGET_SECONDS: ${{ vars.TARGET_SECONDS }}
+      FACT_CHECK: ${{ vars.FACT_CHECK }}
+      POLL_MINUTES: ${{ vars.POLL_MINUTES }}
+      SCHEDULE_PUBLISH: ${{ vars.SCHEDULE_PUBLISH }}
+      PUBLISH_TZ: ${{ vars.PUBLISH_TZ }}
+      PUBLISH_SLOTS_WEEKDAY: ${{ vars.PUBLISH_SLOTS_WEEKDAY }}
+      PUBLISH_SLOTS_WEEKEND: ${{ vars.PUBLISH_SLOTS_WEEKEND }}
+      YT_DAILY_UPLOADS: ${{ vars.YT_DAILY_UPLOADS }}
+      KEEP_VIDEOS_DAYS: ${{ vars.KEEP_VIDEOS_DAYS }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+
+      - name: Install FFmpeg + fonts (if missing)
+        timeout-minutes: 15
+        run: |
+          # apt mirrors occasionally hang; give each try 5 minutes and retry so one stuck mirror can't block the bot
+          for i in 1 2 3; do
+            if command -v ffmpeg >/dev/null && fc-list | grep -qi "DejaVu Sans"; then break; fi
+            sudo timeout 300 apt-get -o Acquire::Retries=3 -o Acquire::http::Timeout=30 update -qq \
+              && sudo timeout 300 apt-get -o Acquire::Retries=3 install -y -qq ffmpeg fonts-dejavu-core && break
+            echo "apt attempt $i failed; retrying"; sleep 10
+          done
+
+      - run: pip install -q -r requirements.txt
+
+      - name: Run
+        run: |
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then CMD="${{ inputs.command }}";
+          elif [ "${{ github.event.schedule }}" = "17 3,9,15,21 * * *" ]; then CMD=trends;
+          else CMD=poll; fi
+          echo "Running: $CMD"
+          python -m autopilot.main "$CMD"
+
+      - name: Save state
+        if: always()
+        run: |
+          git config user.name "whyzo-bot"
+          git config user.email "autopilot-bot@users.noreply.github.com"
+          git add state/ archive/ || true
+          git diff --cached --quiet || (git commit -m "state update [skip ci]" && git pull --rebase && git push)
