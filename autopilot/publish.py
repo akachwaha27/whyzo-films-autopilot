@@ -31,7 +31,29 @@ def yt_service():
     return build("youtube", "v3", credentials=creds, cache_discovery=False)
 
 
-def youtube(path, title, description, tags, category="24", thumb=None, srt=None, comment=None, publish_at=None):
+def add_to_playlist(yt, vid, name):
+    """Series playlists ("What To Do If...") keep Shorts viewers binging the next video. ~51-101 quota units."""
+    if not name:
+        return "playlist skipped"
+    found, page = None, None
+    while not found:
+        r = yt.playlists().list(part="snippet", mine=True, maxResults=50, pageToken=page).execute()
+        found = next((p["id"] for p in r.get("items", []) if p["snippet"]["title"] == name), None)
+        page = r.get("nextPageToken")
+        if not page:
+            break
+    if not found:
+        found = yt.playlists().insert(part="snippet,status", body={
+            "snippet": {"title": name, "description": f"{config.CHANNEL_NAME}: {name} - animated in under a minute.",
+                        "defaultLanguage": config.LANGUAGE},
+            "status": {"privacyStatus": "public"}}).execute()["id"]
+    yt.playlistItems().insert(part="snippet", body={"snippet": {
+        "playlistId": found, "resourceId": {"kind": "youtube#video", "videoId": vid}}}).execute()
+    return "playlist ✅"
+
+
+def youtube(path, title, description, tags, category="24", thumb=None, srt=None, comment=None, publish_at=None,
+            playlist=None):
     if not (config.YT_CLIENT_ID and config.YT_CLIENT_SECRET and config.YT_REFRESH_TOKEN):
         return None, "skipped (not configured)"
     from googleapiclient.errors import HttpError
@@ -86,6 +108,11 @@ def youtube(path, title, description, tags, category="24", thumb=None, srt=None,
             notes.append("comment ✅")
         except HttpError as e:
             notes.append(f"comment ⚠️ {why(e)}")
+    if playlist:
+        try:
+            notes.append(add_to_playlist(yt, vid, playlist))
+        except HttpError as e:
+            notes.append(f"playlist ⚠️ {why(e)}")
     return f"https://youtube.com/shorts/{vid}", " · ".join(notes)
 
 
@@ -240,10 +267,10 @@ def tiktok(path, caption):
 
 
 def publish_all(path, title, description, hashtags, tags=(), category="24", thumb=None, srt=None, comment=None,
-                publish_at=None):
+                publish_at=None, playlist=None):
     cap = {p: social_caption(title, description, hashtags, p) for p in ("instagram", "facebook", "tiktok")}
     results = {}
-    for name, fn in (("YouTube", lambda: youtube(path, title, description, list(tags) or [h.lstrip("#") for h in hashtags], category, thumb, srt, comment, publish_at)),
+    for name, fn in (("YouTube", lambda: youtube(path, title, description, list(tags) or [h.lstrip("#") for h in hashtags], category, thumb, srt, comment, publish_at, playlist)),
                      ("Instagram", lambda: instagram(path, cap["instagram"])),
                      ("Facebook", lambda: facebook(path, cap["facebook"], title)),
                      ("TikTok", lambda: tiktok(path, cap["tiktok"]))):

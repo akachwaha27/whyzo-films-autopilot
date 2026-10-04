@@ -8,13 +8,18 @@ from . import config, llm
 
 # YouTube category ids: 1 Film & Animation, 22 People & Blogs, 24 Entertainment, 26 Howto & Style, 27 Education, 28 Science & Technology
 FORMATS = {
-    "howitworks": {"emoji": "⚙️", "name": "How it works", "category": "27", "tag": "#howitworks"},
-    "why": {"emoji": "🤔", "name": "Why…?", "category": "27", "tag": "#didyouknow"},
-    "whatif": {"emoji": "🤯", "name": "What happens if", "category": "27", "tag": "#whatif"},
-    "survival": {"emoji": "🛟", "name": "What to do if", "category": "26", "tag": "#survivaltips"},
-    "truestory": {"emoji": "📜", "name": "True story", "category": "24", "tag": "#truestory"},
-    "creature": {"emoji": "🦎", "name": "Strange creature", "category": "27", "tag": "#animals"},
-    "hack": {"emoji": "🛠️", "name": "Clever hack", "category": "26", "tag": "#lifehacks"},
+    "howitworks": {"emoji": "⚙️", "name": "How it works", "category": "27", "tag": "#howitworks",
+                   "playlist": "How Things Work (Animated)"},
+    "why": {"emoji": "🤔", "name": "Why…?", "category": "27", "tag": "#didyouknow", "playlist": "Why Does That Happen?"},
+    "whatif": {"emoji": "🤯", "name": "What happens if", "category": "27", "tag": "#whatif",
+               "playlist": "What Happens If…"},
+    "survival": {"emoji": "🛟", "name": "What to do if", "category": "26", "tag": "#survivaltips",
+                 "playlist": "What To Do If… (Survival Tips)"},
+    "truestory": {"emoji": "📜", "name": "True story", "category": "24", "tag": "#truestory",
+                  "playlist": "Unbelievable True Stories"},
+    "creature": {"emoji": "🦎", "name": "Strange creature", "category": "27", "tag": "#animals",
+                 "playlist": "Weird Animals Explained"},
+    "hack": {"emoji": "🛠️", "name": "Clever hack", "category": "26", "tag": "#lifehacks", "playlist": "Clever Hacks"},
 }
 TITLE_EMOJIS = "😮 🤔 🤨 😱 🤯 😨 😬 😏 😇 🥲"
 
@@ -190,7 +195,8 @@ def build_description(pkg, credits, human_reviewed=False):
     tags = " ".join(pkg["hashtags"][:5])
     review_line = ("Original script written with AI assistance, fact-checked and safety-reviewed"
                    + (", and approved by the channel owner." if human_reviewed else "."))
-    lines = [pkg["description"].strip(), "", tags, "", f"{config.CHANNEL_NAME} - AI-animated facts & stories.",
+    lines = [pkg["description"].strip(), "", f"🔔 Subscribe for a new \"wait, really?\" every day: {config.CHANNEL_HANDLE}",
+             "", tags, "", f"{config.CHANNEL_NAME} - AI-animated facts & stories.",
              "", "— Credits & disclosure —", review_line,
              "Visuals are AI-generated 3D animation; narration is an AI voice."]
     lines += credits

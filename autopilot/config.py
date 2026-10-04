@@ -44,6 +44,7 @@ INSTAGRAM_HASHTAGS = env("INSTAGRAM_HASHTAGS", 5, int)  # Instagram allows at mo
 
 # --- AI visuals ---
 CHANNEL_NAME = env("CHANNEL_NAME", "Whyzo Films")
+CHANNEL_HANDLE = env("CHANNEL_HANDLE", "@WhyzoFilms")
 CF_ACCOUNT_ID = env("CF_ACCOUNT_ID")                 # free FLUX stills (fallback when FAL_KEY is not set)
 CF_API_TOKEN = env("CF_API_TOKEN")
 FAL_KEY = env("FAL_KEY")                             # fal.ai: sharp 9:16 stills + image-to-video animation

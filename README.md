@@ -14,7 +14,7 @@ You tap ideas (or ignore it: after 30 min it makes the top 2 itself)
    ─► camera moves on the other shots, word-by-word captions, whoosh sound effects, light music ─► 1080×1920 MP4
    ─► preview in Telegram [✅ Publish] [🔁 Redo] [🎙 New voice] [⏭ Skip]
 You tap Publish (or ignore it: after 45 min it publishes itself)
-   ─► YouTube (scheduled for the run's two publish slots) + optional Instagram / Facebook / TikTok
+   ─► YouTube (scheduled for the run's two publish slots, added to its series playlist) + optional Instagram / Facebook / TikTok
 ```
 
 Publish slots (US Eastern, 2 every 6 hours): **1:30 & 3:00 AM, 7:30 & 9:00 AM, 1:30 & 3:00 PM, 7:30 & 9:00 PM**.
@@ -105,6 +105,7 @@ fallback images), optional `PIXABAY_API_KEY` / `PEXELS_API_KEY` (last-resort sto
 | `APPROVE_TIMEOUT_HOURS` | `0.75` | Auto-publish after this long (`0` = always wait for you) |
 | `PUBLISH_SLOTS_WEEKDAY` / `_WEEKEND` | 8 slots above | Publish times (`PUBLISH_TZ`, default New York) |
 | `TARGET_SECONDS` | `32` | Video length |
+| `CHANNEL_HANDLE` | `@WhyzoFilms` | Used in the subscribe line of every description |
 | `FACT_CHECK` | `true` | Check facts against Wikipedia before rendering |
 | `SFX` | `true` | Whoosh on scene changes |
 

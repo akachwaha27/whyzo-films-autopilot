@@ -384,7 +384,8 @@ def do_publish(st, vid):
         slot = schedule.next_slot(taken)
     results = publish.publish_all(path, pkg["title"], desc, pkg["hashtags"], pkg.get("tags", []),
                                   pkg.get("category", "24"), thumb, srt_path, pkg.get("pinned_comment"),
-                                  slot.isoformat().replace("+00:00", "Z") if slot else None)
+                                  slot.isoformat().replace("+00:00", "Z") if slot else None,
+                                  writer.FORMATS.get(pkg.get("format"), {}).get("playlist"))
     v["status"], v["results"], v["updated"] = "published", {k: list(r) for k, r in results.items()}, state.iso()
     v["uploaded_at"] = state.iso()
     if slot:
