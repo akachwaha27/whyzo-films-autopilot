@@ -4,6 +4,8 @@ import os
 
 def env(name, default=None, cast=str):
     val = os.getenv(name)
+    if val is not None:
+        val = val.strip().strip('"').strip("'").strip()  # pasted secrets often carry stray spaces/quotes/newlines
     if val is None or val == "":
         return default
     if cast is bool:
