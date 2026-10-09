@@ -60,8 +60,13 @@ def _ok_name(n):
 
 
 # ---------------- providers ----------------
+def _gkey():
+    """Header auth works for both classic (AIza...) and newer (AQ....) Gemini keys, and keeps keys out of URLs/logs."""
+    return {"x-goog-api-key": config.GEMINI_API_KEY}
+
+
 def _gemini_models():
-    r = requests.get(f"{GEMINI}/models", params={"key": config.GEMINI_API_KEY, "pageSize": 200}, timeout=30)
+    r = requests.get(f"{GEMINI}/models", params={"pageSize": 200}, headers=_gkey(), timeout=30)
     r.raise_for_status()
     names = [m["name"].split("/", 1)[1] for m in r.json().get("models", [])
              if "generateContent" in m.get("supportedGenerationMethods", []) and _ok_name(m["name"])]
@@ -77,7 +82,7 @@ def _gemini_call(model, prompt, temperature):
     gen = {"temperature": temperature}
     if model.startswith("gemini"):
         gen["responseMimeType"] = "application/json"
-    r = requests.post(f"{GEMINI}/models/{model}:generateContent", params={"key": config.GEMINI_API_KEY},
+    r = requests.post(f"{GEMINI}/models/{model}:generateContent", headers=_gkey(),
                       json={"contents": [{"role": "user", "parts": [{"text": prompt}]}], "generationConfig": gen},
                       timeout=180)
     if r.status_code >= 400:
